@@ -31,6 +31,9 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
     
     //Call Web Service
     [self getWebData];
+    
+    //Refresh List
+    [self pullToRefresh];
 }
 -(void) createTableView{
     tableview = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height) style:UITableViewStylePlain];
@@ -106,7 +109,21 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
     [alertController addAction:okAction];
     [self presentViewController:alertController animated:YES completion:nil];
 }
-
+-(void) pullToRefresh{
+    // Initialize the refresh control.
+    refreshControl = [[UIRefreshControl alloc] init];
+    refreshControl.backgroundColor = [UIColor lightGrayColor];
+    refreshControl.tintColor = [UIColor whiteColor];
+    [refreshControl addTarget:self
+                       action:@selector(loadData)
+             forControlEvents:UIControlEventValueChanged];
+    [tableview addSubview:refreshControl];
+}
+-(void)loadData
+{
+    [tableview reloadData];
+    [refreshControl endRefreshing];
+}
 #pragma mark UITableView Datasource
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     return arrResponse.count;
@@ -147,7 +164,7 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
                                   placeholderImage:[UIImage imageNamed:@"PlaceholderImg"]
                                            success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
                                                
-                                               tableviewCell.imageView.image=image;
+                                               tableviewCell.imageView.image= image;
                                            }
                                            failure:nil];
             });
