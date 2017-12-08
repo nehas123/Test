@@ -7,16 +7,17 @@
 //
 
 #import <XCTest/XCTest.h>
+#import "ViewController.h"
 
 @interface TestTests : XCTestCase
-
+@property ViewController *viewController;
 @end
 
 @implementation TestTests
 
 - (void)setUp {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+    self.viewController = [[ViewController alloc] init];
 }
 
 - (void)tearDown {
@@ -24,9 +25,14 @@
     [super tearDown];
 }
 
-- (void)testExample {
-    // This is an example of a functional test case.
-    // Use XCTAssert and related functions to verify your tests produce the correct results.
+- (void)testNavigationTitle {
+    NSString *url = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.json";
+    NSString *expectedTitle = @"About Canada";
+    [self.viewController getWebDataWithUrlString:url completionHandler:^(bool complete) {
+        NSString *resultTitle = self.viewController.navBarTitle;
+        XCTAssertEqualObjects(expectedTitle, resultTitle);
+        
+    }];
 }
 
 - (void)testPerformanceExample {

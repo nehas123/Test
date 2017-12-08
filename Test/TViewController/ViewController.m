@@ -30,7 +30,11 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
     [self createTableView];
     
     //Call Web Service
-    [self getWebData];
+    [self getWebDataWithUrlString:strUrl completionHandler:^(bool complete) {
+        if (complete) {
+            NSLog(@"complete");
+        }
+    }];
     
     //Refresh List
     [self pullToRefresh];
@@ -40,7 +44,7 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
     tableview.delegate = self;
     tableview.dataSource = self;
     [self.view addSubview:tableview];
-    tableview.estimatedRowHeight = 44;
+    tableview.estimatedRowHeight = kTableViewCellHeight;
     tableview.rowHeight = UITableViewAutomaticDimension;
     
     //Constraints
@@ -82,18 +86,19 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
     [self.view addConstraint:width];
     [self.view addConstraint:height];
 }
--(void) getWebData{
-    NSURL *url = [NSURL URLWithString:strUrl];
+-(void) getWebDataWithUrlString:(NSString *)urlString completionHandler:(void(^)(bool))isComplete{
+    NSURL *url = [NSURL URLWithString:urlString];
     NSURLRequest *request = [[NSURLRequest alloc] initWithURL:url];
     
     AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
     operation.responseSerializer = [AFJSONResponseSerializer serializer];
     [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
-        
         NSDictionary* responseDict = (NSDictionary *)responseObject;
         NSArray *responseArray = [responseDict valueForKey:@"rows"];
         arrResponse = [NSArray arrayWithArray:responseArray];
-        self.title = [responseDict objectForKey:@"title"];
+        _navBarTitle = [NSString stringWithFormat:@"%@",[responseDict objectForKey:@"title"]];
+        self.title = _navBarTitle;
+        isComplete(true);
         [tableview reloadData];
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
@@ -152,17 +157,7 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
     }
     
     if ([[arrResponse objectAtIndex:indexPath.row] valueForKey:@"imageHref"] != [NSNull null]) {
-        
-    __weak UITableViewCell *weakCell = tableviewCell;
-    [tableviewCell.imageView setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[[arrResponse objectAtIndex:indexPath.row] valueForKey:@"imageHref"]]]
-                                  placeholderImage:[UIImage imageNamed:@"PlaceholderImg"]
-                                           success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
-                                               if (tableviewCell.tag == indexPath.row) {
-                                               weakCell.imageView.image = image;
-                                               [tableView setNeedsLayout];
-                                               }
-                                           } failure:^(NSURLRequest *request, NSHTTPURLResponse * __nullable response, NSError *error){
-                                           }];
+        [self downloadImage:tableviewCell atIndexPath:indexPath];
     }
     else{
         tableviewCell.imageView.image = [UIImage imageNamed:@"PlaceholderImg"];
@@ -170,6 +165,18 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
     return tableviewCell;
 }
 
+- (void) downloadImage:(UITableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
+    __weak UITableViewCell *weakCell = cell;
+    [cell.imageView setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[[arrResponse objectAtIndex:indexPath.row] valueForKey:@"imageHref"]]]
+                                   placeholderImage:[UIImage imageNamed:@"PlaceholderImg"]
+                                            success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+                                                if (cell.tag == indexPath.row) {
+                                                    weakCell.imageView.image = image;
+                                                    [tableview setNeedsLayout];
+                                                }
+                                            } failure:^(NSURLRequest *request, NSHTTPURLResponse * __nullable response, NSError *error){
+                                            }];
+}
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.

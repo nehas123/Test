@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @interface ViewController : UIViewController<UITableViewDelegate,UITableViewDataSource>
-
-
+@property (nonatomic,strong) NSString *navBarTitle;
+-(void) getWebDataWithUrlString:(NSString *)urlString completionHandler:(void(^)(bool))isComplete;
 @end
 
