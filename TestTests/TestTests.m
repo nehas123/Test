@@ -31,7 +31,6 @@
     [self.viewController getWebDataWithUrlString:url completionHandler:^(bool complete) {
         NSString *resultTitle = self.viewController.navBarTitle;
         XCTAssertEqualObjects(expectedTitle, resultTitle);
-        
     }];
 }
 

@@ -126,7 +126,11 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
 }
 -(void)loadData
 {
-    [tableview reloadData];
+    [self getWebDataWithUrlString:strUrl completionHandler:^(bool complete) {
+        if (complete) {
+            NSLog(@"complete");
+        }
+    }];
     [refreshControl endRefreshing];
 }
 #pragma mark UITableView Datasource
