@@ -130,10 +130,11 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
 }
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *cellId = @"cellId";
-    UITableViewCell *tableviewCell = [tableView dequeueReusableCellWithIdentifier:cellId];
+     UITableViewCell *tableviewCell = [tableView dequeueReusableCellWithIdentifier:cellId];
     if(tableviewCell == nil){
         tableviewCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellId];
     }
+    tableviewCell.tag = indexPath.row;
     tableviewCell.textLabel.numberOfLines = 0;
     if([[arrResponse objectAtIndex:indexPath.row] valueForKey:@"title"] != [NSNull null]){
         tableviewCell.textLabel.text = [[arrResponse objectAtIndex:indexPath.row] valueForKey:@"title"];
@@ -152,23 +153,16 @@ NSString *strUrl = @"https://dl.dropboxusercontent.com/s/2iodh4vg0eortkl/facts.j
     
     if ([[arrResponse objectAtIndex:indexPath.row] valueForKey:@"imageHref"] != [NSNull null]) {
         
-        __block UIImage *img;
-        __block UIImageView *imageView1 = tableviewCell.imageView;
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            
-        img = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString: [[arrResponse objectAtIndex:indexPath.row] valueForKey:@"imageHref"]]]];
-            
-        dispatch_async(dispatch_get_main_queue(),^{
-                
-        [imageView1 setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[[arrResponse objectAtIndex:indexPath.row] valueForKey:@"imageHref"]]]
+    __weak UITableViewCell *weakCell = tableviewCell;
+    [tableviewCell.imageView setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[[arrResponse objectAtIndex:indexPath.row] valueForKey:@"imageHref"]]]
                                   placeholderImage:[UIImage imageNamed:@"PlaceholderImg"]
                                            success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
-                                               
-                                               tableviewCell.imageView.image= image;
-                                           }
-                                           failure:nil];
-            });
-        });
+                                               if (tableviewCell.tag == indexPath.row) {
+                                               weakCell.imageView.image = image;
+                                               [tableView setNeedsLayout];
+                                               }
+                                           } failure:^(NSURLRequest *request, NSHTTPURLResponse * __nullable response, NSError *error){
+                                           }];
     }
     else{
         tableviewCell.imageView.image = [UIImage imageNamed:@"PlaceholderImg"];
